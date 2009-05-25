@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Geoplot | {% endblock %}
+{% block pagetitle %}<span class ='pagetitle'>Geoplot</span>{% endblock %}
+
+{% block content %}
+		<div class="feature photo onblack">
+			<a href = "{% url geoplot %}?center=50,0,0.1&inset=1&zoom=1&size=900x450&markers=50.1,0.01,reds|1,1,reds;">
+			<img src = "{% url geoplot %}?center=50,0,0.1&inset=1&zoom=1&size=600x300&markers=50.1,0.01,reds|1,1,reds;" />
+			</a>
+		</div>
+		
+		<h2>Motivation</h2>
+		<p>Maps and geographical data have become an important part of the web. But there are few easy ways of generating maps without lots of javascript. Google's static maps API aims to solve this problem, but the results can be quite ugly.</p>
+		<p>Geoplot is a simple web service that focuses on making beautiful maps.</p>
+		
+		
+		<h2>Using Geoplot</h2>
+		
+		<p>You can use GeoPlot wherever you can include images. Geoplot dynamically creates maps based on parameters you pass into the url.</p>
+		
+		
+		
+		
+		
+		
+		
+		<h2>Make a map</h2>
+		<div>
+			
+			<script type = 'text/javascript'>
+			function coords_to_long_lat(x,y, img){
+				return [((x/img.width() * 360) - 180), (((y / img.height()*180) - 90) * -1)];
+			}
+			
+			function update_geoplot_create(){
+							var source = $('#geoplot-raw-url').text() + '?markers=' +  $('#points').val().substr(0,$('#points').val().length -1)
+							$('#geoplot-creat-current').attr('src', source + "&size=300x150");
+							$('#geoplot-generated-code').text("<a href = '{{ DOMAIN }}{% url geoplot %}about'><img src = '" + source + '&size=' +$('#geoplot-size').val() +"' alt = 'Geoplot' /></a>");
+			}
+			
+			/* Fix broken browsers - based on quirksmode */
+			$.fn.offsetLeft = function() {
+				 var e = this.get(0);
+				 if(!e.offsetParent) return e.offsetLeft;
+				 return e.offsetLeft + $(e.offsetParent).offsetLeft(); }
+	
+			
+			$.fn.offsetTop = function() {
+				 var e = this.get(0);
+				 if(!e.offsetParent) return e.offsetTop;
+				 return e.offsetTop + $(e.offsetParent).offsetTop(); }
+	
+			
+			$(document).ready( function(){
+					//Add Onclick to image
+					var offs = $('#geoplot-creat-current').offset();
+					$('#geoplot-creat-current').click( function(e){
+							var mousepos = [e.pageX - $(this).offsetLeft(), e.pageY- $(this).offsetTop()]; //TODO why 45pt offset?
+							var coord = coords_to_long_lat(mousepos[0],mousepos[1], $(this));
+							$('#points').val($('#points').val() + coord[1] + "," + coord[0]+",red|");
+							update_geoplot_create()
+						}
+					);
+					//Add Onchange to selector
+					$('#geoplot-size').change(function(){
+						update_geoplot_create();
+					})
+				
+					update_geoplot_create();
+				}
+			);
+			
+			</script>
+			<form id = 'geoplot-create' method = 'get' action = "http://peterbraden.co.uk/tools/geoplot">
+				<p>Click on the map to add points:</p> <span class = 'minor note'>(May take a few seconds for point to appear)</span><!-- If you're looking at the code you'll see we're just replacing the image :) -->
+	
+				<div id = 'ff-hack' style = 'padding:0; margin:0;'>
+				<img id = 'geoplot-creat-current' style = 'display: block; padding:0; margin:0;' src = '{{ DOMAIN }}{% url geoplot %}?size=300x150' alt = "Geoplot current image" />
+				</div> 
+				
+				<div>
+					<span id = 'geoplot-raw-url' style = 'display:none;' >{{DOMAIN}}{% url geoplot %}</span>
+					<input id = 'points' name = 'points' value = "" style = 'display:none;'></input>
+				</div>
+				
+				<label for = 'geoplot-size'>Image size</label>
+				<select id = 'geoplot-size' name = 'size' type = '' >
+					<option value= '200x100' selected="selected">Small</option>
+					<option value= '300x150'>Medium</option>
+					<option value= '600x300'>Large</option>
+				</select>	
+				<a href = '#' onclick = "$('#points').val(''); update_geoplot_create(); return false;">Clear map</a>
+			
+				<div>
+	
+					<h3>Generated Code</h3>
+					<p>Copy and paste this onto your page:</p>
+					<code id = 'geoplot-generated-code' style = 'overflow:scroll; width:30em;'>&lt;a href = "{% url geoplot %}/about"&gt;&lt;img src='{{ DOMAIN }}{% url geoplot %}?size=300x150" alt = 'Geoplot' /&gt;&lt;/a&gt;</code>
+					
+				</div>
+	
+			</form>
+		</div>
+
+		
+		
+		<h2>The API</h2>
+		<p>Where possible, the API for GeoPlot follows that of <a href = "http://code.google.com/apis/maps/documentation/staticmaps/">Google Static Maps.</a></p>
+		
+		<h3>Parameters</h3>
+		
+		<dl>
+			<dt>center</dt>
+			<dd>(latitude, longitude) The <var>center</var> parameter specifies the focus of the map &mdash; the look-at point. In Geoplot, this is more of a guideline and thus this point may fall anywhere within the center section of the map.</dd>
+		
+			<dt>size</dt>
+			<dd>(WidthxHeight) Specifies the size of the output image. At the moment, this also is only a guideline for Geoplot, however it is expected that the output will follow this more closely in future.</dd>
+		
+			<dt>zoom</dt>
+			<dd>(0-2) How far in to zoom. Currently we only have imagery for zoom 0-2 inclusive.</dd>
+			
+			<dt>inset</dt>
+			<dd>(0/1) Include an inset map? Only really makes sense for maps zoomed in more than 0.</dd>
+			
+			<dt>markers</dt>
+			<dd>Check out the Google Api spec for more information. We ignore the size and alphanumeric character arguments.</dd>
+			
+			
+		</dl>
+		
+		
+		
+		
+		
+		
+		<h2>But I want a dynamic map&hellip;</h2>
+		<p>There are many tools to create dynamic maps already. Geoplot doesn't aim to compete with them. You might try:</p>
+		<ul>
+			<li><a href = 'http://www.openstreetmap.org/'>Open Streetmap</a></li>
+			<li><a href = "http://code.google.com/apis/maps/">Google Maps API</a></li>
+			<li><a href = "http://developer.yahoo.com/maps/">Yahoo Maps API</a></li>
+			<li><a href = "http://dev.live.com/VirtualEarth/">Microsoft Live Maps</a></li>
+		</ul>
+		
+		
+		<h2>Hotlinking</h2>
+		<p>Feel free to hotlink to the service on low traffic websites with attribution. If you're going to have more than a few hundred requests per day, please <a href = "{%url contact_page %}">contact me</a> - if you only need specific images you can simply save them and host them from your own server.</p>
+		
+		<p>If you're hosting the images yourself no attribution is necessary, but a linkback is always appreciated.</p>
+		
+		<p>Please note that I make no guarantees about the availability of the service. I run this site as a hobby, and bandwidth isn't free. The API may change - check this page for updates.</p>
+		
+		<h2>Imagery</h2>
+		<p>Geoplot uses satellite imagery from the Blue Marble data set from NASA's <a href = "http://earthobservatory.nasa.gov/Features/BlueMarble/BlueMarble_monthlies.php">Earth Observatory</a>.</p>
+		
+		
+		<h2>Code</h2>
+		<p>Eventually I intend to release the source code to geoplot - it runs on django/python using PIL. Currently it's tightly coupled to my website, and wouldn't work out of the box, so I'm holding back on releasing it until I can extricate the source.</p>
+		
+		<h2>Like it?</h2>
+		<p>I'd love to hear your thoughts. Drop me an email. If you'd like to buy me a drink to thank me there's a link at the top-left ;)</p>
+		
+{% endblock %}
